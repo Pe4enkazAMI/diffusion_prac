@@ -119,12 +119,12 @@ class ControlCUNet(nn.Module):
         c5 = self.zero_down4(self.down4(c4))
 
         x = self.cunet.adain1(c5 + x5, z)
-        x = self.cunet.up1(x4 + self.zero_down3(c4), x)
+        x = self.cunet.up1(x, x4 + self.zero_down3(c4))
         x = self.cunet.adain2(x, z)
-        x = self.cunet.up2(x3 + self.zero_down2(c3), x)
+        x = self.cunet.up2(x, x3 + self.zero_down2(c3))
         x = self.cunet.adain3(x, z)
-        x = self.cunet.up3(x2 + self.zero_down1(c2), x)
+        x = self.cunet.up3(x, x2 + self.zero_down1(c2))
         x = self.cunet.adain4(x, z)
-        x = self.cunet.up4(x1 + self.zero_inc(c1), x)
+        x = self.cunet.up4(x, x1 + self.zero_inc(c1))
         out = self.cunet.outc(x)
         return out
