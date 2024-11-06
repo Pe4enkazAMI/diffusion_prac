@@ -56,17 +56,36 @@ class ControlCUNet(nn.Module):
         self.base_factor = cunet.base_factor
 
         factor = 2
-        self.zero0 = ZeroConv2d(in_channels=self.in_channels, out_channels=self.in_channels)
-        self.inc = DoubleConv(self.in_channels, self.base_factor)
-        self.zero_inc = ZeroConv2d(in_channels=self.base_factor, out_channels=self.base_factor)
-        self.down1 = Down(in_channels=self.base_factor, out_channels=self.base_factor * 2)
-        self.zero_down1 = ZeroConv2d(in_channels=self.base_factor * 2, out_channels=self.base_factor * 2)
-        self.down2 = Down(in_channels=self.base_factor * 2, out_channels=self.base_factor * 4)
-        self.zero_down2 = ZeroConv2d(in_channels=self.base_factor * 4, out_channels=self.base_factor * 4)
-        self.down3 = Down(in_channels=self.base_factor * 4, out_channels=self.base_factor * 8)
-        self.zero_down3 = ZeroConv2d(in_channels=self.base_factor * 8, out_channels=self.base_factor * 8)
-        self.down4 = Down(in_channels=self.base_factor * 8, out_channels=self.base_factor * 16 // factor)
-        self.zero_down4 = ZeroConv2d(in_channels=self.base_factor * 16 // factor, out_channels=self.base_factor * 16 // factor)
+        self.zero0 = ZeroConv2d(self.in_channels, self.in_channels)
+
+        self.inc = DoubleConv(self.in_channels,
+                               self.base_factor)
+        self.zero_inc = ZeroConv2d(self.base_factor,
+                                   self.base_factor)
+        
+        self.down1 = Down(self.base_factor,
+                          self.base_factor * 2)
+        
+        self.zero_down1 = ZeroConv2d(self.base_factor * 2,
+                                     self.base_factor * 2)
+
+        self.down2 = Down(self.base_factor * 2,
+                          self.base_factor * 4)
+
+        self.zero_down2 = ZeroConv2d(self.base_factor * 4,
+                                     self.base_factor * 4)
+
+        self.down3 = Down(self.base_factor * 4,
+                          self.base_factor * 8)
+
+        self.zero_down3 = ZeroConv2d(self.base_factor * 8, 
+                                     self.base_factor * 8)
+        
+        self.down4 = Down(self.base_factor * 8, 
+                          16 * self.base_factor // factor)
+
+        self.zero_down4 = ZeroConv2d(16 * self.base_factor // factor,
+                                     16 * self.base_factor // factor)
 
         # важно оставить такими же названия повторяющихся модулей, чтобы копирование сработало
         misc.copy_params_and_buffers(src_module=self.cunet, dst_module=self, require_all=False)
@@ -100,12 +119,12 @@ class ControlCUNet(nn.Module):
         c5 = self.zero_down4(self.down4(c4))
 
         x = self.cunet.adain1(c5 + x5, z)
-        x = self.cunet.up1(x + self.zero_down3(c4), x4)
+        x = self.cunet.up1(x4 + self.zero_down3(c4), x)
         x = self.cunet.adain2(x, z)
-        x = self.cunet.up2(x + self.zero_down2(c3), x3)
+        x = self.cunet.up2(x3 + self.zero_down2(c3), x)
         x = self.cunet.adain3(x, z)
-        x = self.cunet.up3(x + self.zero_down1(c2), x2)
+        x = self.cunet.up3(x2 + self.zero_down1(c2), x)
         x = self.cunet.adain4(x, z)
-        x = self.cunet.up4(x + self.zero_inc(c1), x1)
+        x = self.cunet.up4(x1 + self.zero_inc(c1), x)
         out = self.cunet.outc(x)
         return out
